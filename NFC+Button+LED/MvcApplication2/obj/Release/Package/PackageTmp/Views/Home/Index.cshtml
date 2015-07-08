@@ -1,0 +1,86 @@
+﻿
+<script src="/Scripts/jquery-1.7.1.min.js"></script>
+<script src="/Scripts/jquery.signalR-1.2.1.js"></script>
+<script src="/signalr/hubs"></script>
+
+<div style="background-color: lightgray; margin: 0 auto 10px; padding: 10px 5px 20px">
+    <h2>The Open University of Hong Kong!!!</h2>
+    <ul>
+        <li>GPIO Done! (150619)</li>
+        <li>SignalR Done! (150625)</li>
+    </ul>
+</div>
+
+<input type="button" value="ON" onclick="OnButton(this);" />&nbsp;
+<input type="button" value="OFF" onclick="OnButton(this);" />
+<input type="text" id="showText" />
+
+<p>
+    <span style="font-weight: bold;">Button Status:</span>&nbsp;
+    <span id="currentStatus" style="color: red">---</span>
+</p>
+
+<script type="text/javascript">
+    function OnButton(elem) {
+        var dataContent = { parameterName: $(elem).val() };
+        $.ajax({
+            url: '/Home/OnButton',
+            type: 'Post',
+            data: dataContent,
+            complete: function () { },
+            success: function (result) {
+                if (result.success == true) {
+                    $('#showText').val(result.show);
+                }
+            }
+        })
+    }
+</script>
+
+<script type="text/javascript">
+    $(function () {
+        var gpio = $.connection.gPIOHub;
+        gpio.client.updateStatus = function (status) {
+            $('#currentStatus').html(status);
+        };
+        $('#message').focus();
+        $.connection.hub.start().done(function () {
+            $('#sendmessage').click(function () {
+                chat.server.send($('#displayname').val(), $('#message').val());
+                $('#message').val('').focus();
+            });
+        });
+        $.connection.hub.disconnected(function () {
+            $.connection.hub.start();
+        });
+        $('#btnTestGPIOHub').click(function () {
+            $.ajax({
+                url: '@Url.Action("OnButtonTestGPIO")',
+                type: 'Post',
+                data: { currentStatus: $('#currentStatus').html() },
+                complete: function () { },
+                success: function () { }
+            })
+        });
+    });
+</script>
+@model string
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Index</title>
+</head>
+<body>
+    <div>
+        <span style="font-weight: bold;">NFC Reader</span>&nbsp;
+    </div>
+    <div>
+        <span style="font-weight: bold;">Output of process:</span>&nbsp;
+        <pre>@Model</pre>
+    </div>
+</body>
+</html>
