@@ -52,32 +52,19 @@ namespace MvcApplication2
 
             Thread watcher = new Thread(new ThreadStart(ThreadWatcher));
             watcher.Start();
+            Thread watch = new Thread(new ThreadStart(ThreadWatch));
+            watch.Start();
+            return;
         }
 
-        public static TinyGPIO GPIO24_Sw1 { get; set; }
-        public static GPIOState CurrentState { get; set; }
-        public static TinyGPIO GPIO25_LED1 { get; set; }
-
-        private static void InitiGPIO()
-        {
-            // init GPIO 24 for Switch1
-            GPIO24_Sw1 = TinyGPIO.Export(24);
-            GPIO24_Sw1.Direction = GPIODirection.In;
-
-            // init GPIO 25 for LED1
-            GPIO25_LED1 = TinyGPIO.Export(25);
-            GPIO25_LED1.Direction = GPIODirection.Out;
-        }
-
-        static private void ThreadWatcher()
+        private void ThreadWatch()
         {
             CurrentState = new GPIOState();
-            var procStartInfo = new ProcessStartInfo();
-
-
             while (true)
             {
+
                 var sw1 = GPIO24_Sw1.Value != 0;
+
                 lock (CurrentState)
                 {
                     if (CurrentState.sw1 != sw1)
@@ -93,18 +80,60 @@ namespace MvcApplication2
                         else
                         {
                             GPIO.Instance.UpdateButtonStatus("Button Not Pressed!!");
-                            Console.WriteLine("Button Not Pressed!"); 
+                            Console.WriteLine("Button Not Pressed!");
                         }
                     }
-                } 
+                }
 
-              
-                
-                Thread.Sleep(100);
-                
+
+                Thread.Sleep(10);
             }
         }
 
+        public static TinyGPIO GPIO24_Sw1 { get; set; }
+        public static GPIOState CurrentState { get; set; }
+        public static TinyGPIO GPIO25_LED1 { get; set; }
+        public static NFCState CurrentNFC { get; set; }
+        public static string Arguments { get; set; }
+        public static string FileName { get; set; }
+        public static bool RedirectStandardOutput { get; set; }
+        public static bool UseShellExecute { get; set; }
 
+        private static void InitiGPIO()
+        {
+            // init GPIO 24 for Switch1
+            GPIO24_Sw1 = TinyGPIO.Export(24);
+            GPIO24_Sw1.Direction = GPIODirection.In;
+
+            // init GPIO 25 for LED1
+            GPIO25_LED1 = TinyGPIO.Export(25);
+            GPIO25_LED1.Direction = GPIODirection.Out;
+        }
+       
+        static private void ThreadWatcher()
+        {
+            Thread.Sleep(10);
+
+            ProcessStartInfo procStartInfo = new ProcessStartInfo();
+            procStartInfo.FileName = "/home/pi/libnfc/libnfc-1.7.0-rc7/utils/nfc-list";
+            procStartInfo.Arguments = "";
+            procStartInfo.RedirectStandardOutput = true;
+            procStartInfo.UseShellExecute = false;
+
+            string outputStr;
+
+            for (; ; )
+            {
+                Thread.Sleep(10);
+
+                Process process = new Process { StartInfo = procStartInfo };
+                process.Start();
+                outputStr = process.StandardOutput.ReadToEnd();
+                process.WaitForExit();
+
+                NFC.Instance.UpdateNFCStatus(outputStr);
+            }
+        }
     }
 }
+

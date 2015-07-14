@@ -29,29 +29,12 @@ namespace MvcApplication2.Controllers
 
         public ActionResult Index()
         {
-            var procStartInfo = new ProcessStartInfo
-{
-#if DEBUG
-    FileName = "cmd",
-    Arguments = "/c dir %windir%",
-#else
-                FileName = "/home/pi/libnfc/libnfc-1.7.0-rc7/examples/nfc-poll",
-                Arguments = "",
-#endif
-
-    RedirectStandardOutput = true,
-    UseShellExecute = false
-};
-            var process = new Process { StartInfo = procStartInfo };
-            process.Start();
-            var outputStr = process.StandardOutput.ReadToEnd();
-            process.WaitForExit();
-
-            return View((object)outputStr);
+            return View();
         }
 
         public ActionResult OnButton(string parameterName)
         {
+            
             string result;
             string consoleResult;
             var gpio25 = TinyGPIO.Export(25);
@@ -72,15 +55,25 @@ namespace MvcApplication2.Controllers
 
             Console.WriteLine(consoleResult);
             return Json(new { success = true, show = result }, JsonRequestBehavior.AllowGet);
+     
         }
 
         public ActionResult OnButtonTestGPIO(string currentStatus)
         {
             if (currentStatus == "true") GPIO.Instance.UpdateButtonStatus("false");
             else GPIO.Instance.UpdateButtonStatus("true");
+  
+            return null;
+        }
+
+        public ActionResult OnButtonTestNFC(string currentNFC)
+        {
+            if (currentNFC == "true") NFC.Instance.UpdateNFCStatus("false");
+            else NFC.Instance.UpdateNFCStatus("true");
 
             return null;
         }
+   
     }
 }
 

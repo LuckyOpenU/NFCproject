@@ -13,12 +13,31 @@
 
 <input type="button" value="ON" onclick="OnButton(this);" />&nbsp;
 <input type="button" value="OFF" onclick="OnButton(this);" />
-<input type="text" id="showText" />
+<input type="text" id="showText" Size="150"   />
 
 <p>
     <span style="font-weight: bold;">Button Status:</span>&nbsp;
     <span id="currentStatus" style="color: red">---</span>
 </p>
+
+@model string
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html>
+<body>
+    <div>
+        <span style="font-weight: bold;">NFC Reader</span>&nbsp;
+    </div>
+    <div>
+        <span style="font-weight: bold;">Output of process:</span>&nbsp;
+
+        <span id="currentNFC" style="color: red">---</span>
+        <pre>@Model</pre>
+    </div>
+</body>
+</html>
 
 <script type="text/javascript">
     function OnButton(elem) {
@@ -64,23 +83,31 @@
         });
     });
 </script>
-@model string
-@{
-    Layout = null;
-}
-<!DOCTYPE html>
-<html>
-<head>
-    <meta name="viewport" content="width=device-width" />
-    <title>Index</title>
-</head>
-<body>
-    <div>
-        <span style="font-weight: bold;">NFC Reader</span>&nbsp;
-    </div>
-    <div>
-        <span style="font-weight: bold;">Output of process:</span>&nbsp;
-        <pre>@Model</pre>
-    </div>
-</body>
-</html>
+
+<script type="text/javascript">
+    $(function () {
+        var nfc = $.connection.nFCHub;
+        nfc.client.updateStatus = function (status) {
+            $('#currentNFC').html(status);
+        };
+        $('#message').focus();
+        $.connection.hub.start().done(function () {
+            $('#sendmessage').click(function () {
+                chat.server.send($('#displayname').val(), $('#message').val());
+                $('#message').val('').focus();
+            });
+        });
+        $.connection.hub.disconnected(function () {
+            $.connection.hub.start();
+        });
+        $('#btnTestNFCHub').click(function () {
+            $.ajax({
+                url: '@Url.Action("OnButtonTestNFC")',
+                type: 'Post',
+                data: { currentNFC: $('#currentNFC').html() },
+                complete: function () { },
+                success: function () { }
+            })
+        });
+    });
+</script>
